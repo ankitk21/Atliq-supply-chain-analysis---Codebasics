@@ -1,0 +1,68 @@
+**************************************************************************************************************
+     WHAT IS THE BREAKDOWN BETWEEN THE MALE AND FEMALE EMPLOYEES WORKING IN THE COMPANY EACH YEAR
+**************************************************************************************************************
+
+SELECT EXTRACT(YEAR FROM D.FROM_YEAR) AS YEAR,E.GENDER,
+COUNT(E.GENDER) 
+FROM EMPLOYEES E
+INNER JOIN DEPT_EMP D
+ON E.EMP_NO = D.EMP_NO
+GROUP BY YEAR,GENDER
+HAVING YEAR>=1990
+ORDER BY YEAR , GENDER
+
+SELECT COUNT(DISTINCT EMP_NO) FROM EMPLOYEES
+
+*****************************************************************************************************
+                    WHAT IS THE NUMBER OF MALE AND FEMALE EMPLOYEES DEPARTMENT WISE
+*****************************************************************************************************
+
+CREATE OR REPLACE TABLE T1 AS
+(SELECT D.DEPT_NAME ,E.GENDER, COUNT(E.GENDER) AS GENDER_COUNT , EXTRACT(YEAR FROM DE.FROM_YEAR) AS YEAR
+FROM DEPARTMENTS D
+INNER JOIN DEPT_EMP DE
+ON D.DEPT_NO = DE.DEPT_NO
+INNER JOIN EMPLOYEES E
+ON DE.EMP_NO = E.EMP_NO
+WHERE GENDER = 'M'
+GROUP BY YEAR , DEPT_NAME , GENDER
+ORDER BY DEPT_NAME)
+
+SELECT * , DENSE_RANK() OVER(ORDER BY YEAR) AS RN FROM T1
+ORDER BY RN
+
+
+*****************************************************************************************************
+     WHAT IS THE AVERAGE SALARY OF EMPLOYEES DEPARTMENT WISE AND GENDER WISE
+*****************************************************************************************************
+
+SELECT AVG(S.SALARY) , EXTRACT(YEAR FROM S.FROM_DATE) AS YEAR , COUNT(E.GENDER), GENDER , DEPT_NAME
+FROM SALARIES S
+INNER JOIN EMPLOYEES e
+ON s.EMP_NO = E.EMP_NO
+INNER JOIN DEPT_EMP ON E.EMP_NO = DEPT_EMP.EMP_NO
+INNER JOIN DEPARTMENTS DP ON DEPT_EMP.DEPT_NO = DP.DEPT_NO
+GROUP BY YEAR , GENDER , DEPT_NAME
+ORDER BY YEAR , GENDER , DEPT_NAME
+
+*****************************************************************************************************
+                            WHAT IS THE GENDER DISTRIBUTION BETWEEN TITLES
+*****************************************************************************************************
+SELECT T.TITLE , COUNT(E.GENDER) , GENDER
+FROM EMPLOYEES E
+INNER JOIN TITLES T
+ON E.EMP_NO = T.EMP_NO
+GROUP BY TITLE,GENDER
+ORDER BY TITLE
+
+*****************************************************************************************************
+                            WHAT IS THE AVERAGE SALARY OF DIFFERENT TITLES
+*****************************************************************************************************
+
+SELECT T.TITLE ,AVG(S.SALARY)
+FROM TITLES T
+INNER JOIN SALARIES S
+ON T.EMP_NO = S.EMP_NO
+GROUP BY TITLE
+
+
