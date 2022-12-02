@@ -1,0 +1,82 @@
+**************************************************************************************************
+			   CREATING A SUMMARY TABLE CONTAINING OT% , IF% , OTIF% , LIFR% AND VOFR%
+**************************************************************************************************
+CREATE TABLE T1 AS SELECT C.CUSTOMER_NAME,
+    C.CITY,
+    (SUM(CASE
+        WHEN ON_TIME = 1 THEN 1
+        ELSE 0
+    END) / COUNT(ORDER_ID) * 100) AS `OT%`,
+    (SUM(CASE
+        WHEN in_full = 1 THEN 1
+        ELSE 0
+    END) / COUNT(ORDER_ID) * 100) AS `IF%`,
+    (SUM(CASE
+        WHEN otif = 1 THEN 1
+        ELSE 0
+    END) / COUNT(ORDER_ID) * 100) AS `OTIF%` FROM
+    ORDERS_AGGREGATE OA
+        INNER JOIN
+    CUSTOMERS C ON OA.CUSTOMER_ID = C.CUSTOMER_ID
+GROUP BY c.CUSTOMER_NAME
+**************************************************************************************************
+										MASTER TABLE
+**************************************************************************************************
+CREATE TABLE MASTER1 AS
+SELECT 
+    C.CUSTOMER_NAME,
+    C.CITY,
+    SUM(O.ORDER_QTY) AS TOTAL_ORDERED,
+    SUM(O.DELIVERY_QTY) AS TOTAL_DELIVERED,
+    (SUM(O.DELIVERY_QTY) / SUM(O.ORDER_QTY) * 100) AS `VOFR%`,
+    (SUM(CASE
+        WHEN O.`In Full` = 1 THEN 1
+        ELSE 0
+    END) / COUNT(O.ORDER_ID) * 100) AS `LIFR%`,
+    T1.`IF%`,
+    T1.`OT%`,
+    T1.`OTIF%`
+FROM
+    ORDERS_LINE O
+        INNER JOIN
+    CUSTOMERS C ON O.CUSTOMER_ID = C.CUSTOMER_ID
+        INNER JOIN
+    T1 ON C.CUSTOMER_NAME = T1.CUSTOMER_NAME
+GROUP BY C.CUSTOMER_NAME
+
+**************************************************************************************************
+										MASTER TABLE WITH METRICS CITY WISE
+**************************************************************************************************
+SELECT 
+    CITY,
+    TOTAL_ORDERED,
+    TOTAL_DELIVERED,
+    `VOFR%`,
+    `LIFR%`,
+    `IF%`,
+    `OT%`,
+    `OTIF%`
+FROM
+    MASTER1
+GROUP BY CITY
+
+**************************************************************************************************
+										AGGREGATED OT% , IF% AND OTIF%
+**************************************************************************************************
+SELECT 
+    (SUM(CASE
+        WHEN ON_TIME = 1 THEN 1
+        ELSE 0
+    END) / COUNT(ORDER_ID) * 100) AS `OT%`,
+    (SUM(CASE
+        WHEN in_full = 1 THEN 1
+        ELSE 0
+    END) / COUNT(ORDER_ID) * 100) AS `IF%`,
+    (SUM(CASE
+        WHEN otif = 1 THEN 1
+        ELSE 0
+    END) / COUNT(ORDER_ID) * 100) AS `OTIF%`
+FROM
+    ORDERS_AGGREGATE OA
+    
+    
